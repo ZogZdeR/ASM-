@@ -13,7 +13,7 @@ static const int cannary_contraception = (int)0xDEADBABE;
 
 enum Error
 {
-    OK = 0,
+    ok = 0,
     struct_nullptr = 1,
     stack_nullptr = 2,
     bigger_size = 3,

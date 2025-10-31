@@ -5,7 +5,7 @@ size_t file_length (FILE *stream)
     assert (stream != NULL);
 
     struct stat statbuf;
-    fstat (fileno (stream), &statbuf); // FIXME: ИСправить с теста на онегина
+    fstat (fileno (stream), &statbuf); 
     return (size_t)statbuf.st_size;
 }
 
@@ -83,8 +83,7 @@ void byte_code_maker (char **ptr_array, int *byte_code, size_t quantity, type *l
         command given_command = command_determination(ptr_array[i]);
         if (given_command == LABLE) set_lable (lable_array, ptr_array[i], j);
         else if (given_command == PUSH || given_command == PUSHR || given_command == POPR || 
-            (given_command >= 10 && given_command <= 16) || given_command == CALL || given_command == PUSHM ||
-            // FIXME - 10 and 16 to const and function for checking if command needs argument
+            (given_command >= JMP && given_command <= JNE) || given_command == CALL || given_command == PUSHM ||
             given_command == POPM) j+= 2;
         else j++;
     }
@@ -107,21 +106,35 @@ void byte_code_maker (char **ptr_array, int *byte_code, size_t quantity, type *l
         }
         else set_lable (lable_array, ptr_array[i], j);
         
-        // FIXME - switch
-        if (given_command == PUSH)
+        switch ((int)given_command)
         {
-            byte_code[j] = paste_value (ptr_array[i]);
-            j++;
-        }
-        else if (given_command == PUSHR || given_command == POPR)
-        {
-            byte_code[j] = ASM_R (ptr_array[i]);
-            j++;
-        }
-        else if ((given_command >= 10 && given_command <= 16) || given_command == CALL)
-        {// FIXME - 10 and 16
-            byte_code[j] = ASM_JMP (ptr_array[i], lable_array);
-            j++;
+            case PUSH:
+                byte_code[j] = paste_value (ptr_array[i]);
+                j++;
+                break;
+            case PUSHR:
+            case POPR:
+                byte_code[j] = ASM_R (ptr_array[i]);
+                j++;
+                break;
+            case JA:
+            case JAE:
+            case JB:
+            case JBE:
+            case JMP:
+            case JE:
+            case JNE:
+            case CALL:
+                byte_code[j] = ASM_JMP (ptr_array[i], lable_array);
+                j++;
+                break;
+            case PUSHM:
+            case POPM:
+                byte_code[j] = ASM_R (ptr_array[i]);
+                j++;
+                break;
+            default:
+                break;
         }
     }
 } 
@@ -133,21 +146,61 @@ type paste_value (char *exect_string)
     return my_atoi(my_strchr(exect_string, ' ') + 1);
 }
 
-type ASM_R (char *exect_string)
+type ASM_R (const char *exect_string)
 {
     char const *value_ptr = my_strchr(exect_string, ' ') + 1;
-    // FIXME - array of names of registers and return index of register in this array
-    if (new_strcmp (value_ptr, "RA")) return 1;
-    if (new_strcmp (value_ptr, "RB")) return 2;
-    if (new_strcmp (value_ptr, "RC")) return 3;
-    if (new_strcmp (value_ptr, "RD")) return 4;
+    for (int i = 0; i < R_quantity; i++)
+    {
+        if (new_strcmp (value_ptr, RX_names[i])) return i;
+    }
     assert (0);
 }
 
 type ASM_JMP (char *exect_string, int *lable_array)
-{// FIXME - ':' to const
-    if (my_strchr(exect_string, ' ')[1] == ':') return lable_array[my_atoi(my_strchr(exect_string, ' ') + 2)];
+{
+    if (my_strchr(exect_string, ' ')[1] == colon) return lable_array[my_atoi(my_strchr(exect_string, ' ') + 2)];
     else return my_atoi(my_strchr(exect_string, ' ') + 1);
+}
+
+/*type ASM_M (char *exect_string)
+{
+    int i = 0;
+    while (exect_string[i] != '\0')
+    {
+        if (exect_string[i] == square_scobe_back)
+        {
+            exect_string[i] = '\0';
+            break;
+        }
+        i++; 
+    }
+    if (my_strchr(exect_string, ' ')[1] == square_scobe) return ASM_R(my_strchr(exect_string, ' ') + 2);
+}*/
+
+int new_strlen (const char * Arr)
+{
+    int size = 0;
+    while (Arr[size] != '\0')
+    {
+        size++;
+    }
+    return size;
+}
+
+int new_atoi (const char *Source)
+{
+    int resoult = 0;
+    int len = new_strlen(Source);
+    int deg = 1;
+    for (int i = len - 1; i >= 0; i--)
+    {
+        if (Source[i] != square_scobe_back && Source[i] != square_scobe)
+        {
+            resoult += deg * (Source[i] - '0');
+            deg *= 10;
+        } 
+    }
+    return resoult;
 }
 
 
@@ -168,80 +221,88 @@ int new_strcmp (const char *First, const char *Second)
 } 
 
  command command_determination (char *string)
- {; // FIXME - command to const
-    if (new_strcmp (string, "PUSH")) {
-        fprintf(stderr, "PUSH");
+ {; 
+    if (new_strcmp (string, c_PUSH)) {
+        fprintf(stderr, "%s", c_PUSH);
         return PUSH;
     }
-    if (new_strcmp (string, "ADD"))  {
-        fprintf(stderr, "ADD");
+    if (new_strcmp (string, c_ADD))  {
+        fprintf(stderr, "%s", c_ADD);
         return ADD;
     }
-    if (new_strcmp (string, "SUB"))  {
-        fprintf(stderr, "SUB");
+    if (new_strcmp (string, c_SUB))  {
+        fprintf(stderr, "%s", c_SUB);
         return SUB;
     }
-    if (new_strcmp (string, "MUL"))  {
-        fprintf(stderr, "MUL");
+    if (new_strcmp (string, c_MUL))  {
+        fprintf(stderr, "%s", c_MUL);
         return MUL;
     }
-    if (new_strcmp (string, "DIV"))  {
-        fprintf(stderr, "DIV");
+    if (new_strcmp (string, c_DIV))  {
+        fprintf(stderr, "%s", c_DIV);
         return DIV;
     }
-    if (new_strcmp (string, "OUT"))  {
-        fprintf(stderr, "OUT");
+    if (new_strcmp (string, c_OUT))  {
+        fprintf(stderr, "%s", c_OUT);
         return OUT;
     }
-    if (new_strcmp (string, "HALT"))  {
-        fprintf(stderr, "HALT");
+    if (new_strcmp (string, c_HALT))  {
+        fprintf(stderr, "%s", c_HALT);
         return HALT;
     }
-    if (new_strcmp (string, "PUSHR"))  {
-        fprintf(stderr, "PUSHR");
+    if (new_strcmp (string, c_PUSHR))  {
+        fprintf(stderr, "%s", c_PUSHR);
         return PUSHR;
     }
-    if (new_strcmp (string, "POPR"))  {
-        fprintf(stderr, "POPR");
+    if (new_strcmp (string, c_POPR))  {
+        fprintf(stderr, "%s", c_POPR);
         return POPR;
     }
-    if (new_strcmp (string, "JMP"))  {
-        fprintf(stderr, "JMP");
+    if (new_strcmp (string, c_JMP))  {
+        fprintf(stderr, "%s", c_JMP);
         return JMP;
     }
-    if (new_strcmp (string, "JB"))  {
-        fprintf(stderr, "JB");
+    if (new_strcmp (string, c_JB))  {
+        fprintf(stderr, "%s", c_JB);
         return JB;
     }
-    if (new_strcmp (string, "JBE"))  {
-        fprintf(stderr, "JBE");
+    if (new_strcmp (string, c_JBE))  {
+        fprintf(stderr, "%s", c_JBE);
         return JBE;
     }
-    if (new_strcmp (string, "JA"))  {
-        fprintf(stderr, "JA");
+    if (new_strcmp (string, c_JA))  {
+        fprintf(stderr, "%s", c_JA);
         return JA;
     }
-    if (new_strcmp (string, "JAE"))  {
-        fprintf(stderr, "JAE");
+    if (new_strcmp (string, c_JAE))  {
+        fprintf(stderr, "%s", c_JAE);
         return JAE;
     }
-    if (new_strcmp (string, "JE"))  {
-        fprintf(stderr, "JE");
+    if (new_strcmp (string, c_JE))  {
+        fprintf(stderr, "%s", c_JE);
         return JE;
     }
-    if (new_strcmp (string, "JNE"))  {
-        fprintf(stderr, "JNE");
+    if (new_strcmp (string, c_JNE))  {
+        fprintf(stderr, "%s", c_JNE);
         return JNE;
     }
-    if (new_strcmp (string, "CALL"))  {
-        fprintf(stderr, "CALL");
+    if (new_strcmp (string, c_CALL))  {
+        fprintf(stderr, "%s", c_CALL);
         return CALL;
     }
-    if (new_strcmp (string, "RET"))  {
-        fprintf(stderr, "RET");
+    if (new_strcmp (string, c_RET))  {
+        fprintf(stderr, "%s", c_RET);
         return RET;
     }
-    if(string[0] == ':') // LABLE
+    if (new_strcmp (string, c_PUSHM))  {
+        fprintf(stderr, "%s", c_PUSHM);
+        return PUSHM;
+    }
+    if (new_strcmp (string, c_POPM))  {
+        fprintf(stderr, "%s", c_POPM);
+        return POPM;
+    }
+    if(string[0] == colon) // LABLE
     {
         return LABLE;
     }
@@ -250,73 +311,7 @@ int new_strcmp (const char *First, const char *Second)
 
 void add_command (int *byte_code, command given_command, size_t j)
 {
-    // FIXME - byte_code[j] = given_command;
-    switch (given_command)
-    {
-        case HALT: 
-            byte_code[j] = 0;
-            break;
-        case PUSH: 
-            byte_code[j] = 1;
-            break;
-        case ADD: 
-            byte_code[j] = 2;
-            break;
-        case SUB: 
-            byte_code[j] = 3;
-            break;
-        case MUL: 
-            byte_code[j] = 4;
-            break;
-        case DIV: 
-            byte_code[j] = 5;
-            break;
-        case OUT: 
-            byte_code[j] = 6;
-            break;
-        case PUSHR: 
-            byte_code[j] = 7;
-            break;
-        case POPR: 
-            byte_code[j] = 8;
-            break;
-        case JMP: 
-            byte_code[j] = 10;
-            break;
-        case JB: 
-            byte_code[j] = 11;
-            break;
-        case JBE: 
-            byte_code[j] = 12;
-            break;
-        case JA: 
-            byte_code[j] = 13;
-            break;
-        case JAE: 
-            byte_code[j] = 14;
-            break;
-        case JE: 
-            byte_code[j] = 15;
-            break;
-        case JNE: 
-            byte_code[j] = 16;
-            break;
-        case CALL: 
-            byte_code[j] = 21;
-            break;
-        case RET: 
-            byte_code[j] = 22;
-            break;
-        case PUSHM: 
-            byte_code[j] = 31;
-            break;
-        case POPM: 
-            byte_code[j] = 32;
-            break;
-        default:
-            assert (0);
-            break;
-    } 
+    byte_code[j] = given_command; 
 }
 
 void set_lable (int *lable_array, char *lable_string, size_t j)

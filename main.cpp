@@ -10,22 +10,31 @@ int main ()
 {
     FILE *byte_code_stream = fopen ("byte_code.bin", "rb");
     assert (byte_code_stream != NULL);
-    processor_tools Tools;
-    stack_initialiser (100, &(Tools.Stack));
-    Tools.IC = 0;
-    size_t length = file_length (byte_code_stream) / sizeof(type);
-    Tools.byte_code = (type *)calloc (length, sizeof(type)); // FIXME - null
-    if (fread (Tools.byte_code, sizeof (type), length, byte_code_stream) != length)
+    Stack_stucture Stack = {};
+    Stack_stucture Returning_Stack = {};
+    Error serr = stack_initialiser(100, &Stack);
+    if (serr != ok)
     {
-        fprintf (stderr, red "Not every value in byte code is read" normal "\n");
+        Dump(&Stack, serr);
+        return 0;
+    }
+    Error rserr = stack_initialiser(10, &Returning_Stack);
+    if (rserr != ok)
+    {
+        Dump(&Returning_Stack, rserr);
         return 0;
     }
 
-    bool flag = true;
-    while (flag)
+    processor_tools Tools = {};
+    processor_error state = constructor (&Tools, &Stack, &Returning_Stack, byte_code_stream);
+    if (state != OK)
     {
-
-
+        processor_dump (state);
+        return 0;
     }
+    state = processor_run (&Tools);
+    if (state != OK) processor_dump (state);
+    
+    processor_destructor(&Tools);
     return 0;
 }

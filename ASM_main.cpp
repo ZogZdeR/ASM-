@@ -7,7 +7,6 @@
 
 int main ()
 {
-    // FIXME - struct asm
     FILE *stream = fopen ("command.txt", "r");
     char *buffer = (char *)calloc (file_length (stream) + 1, sizeof(char)); // FIXME - null
 
@@ -36,6 +35,7 @@ int main ()
         fprintf (stderr, "%d ", byte_code[element]);
         element ++; 
     }
+    fprintf (stderr, "\n");
 
     free (byte_code);
     free (ptr_array);

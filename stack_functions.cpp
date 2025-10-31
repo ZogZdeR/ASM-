@@ -9,7 +9,7 @@ Error stack_initialiser (size_t capacity, Stack_stucture *structure)
     if (structure->Stack == NULL) return stack_nullptr;
     structure->Stack[0] = cannary_contraception;
     structure->Stack[capacity + 1] = cannary_contraception;
-    return OK;
+    return ok;
 }
 
 Error verify (Stack_stucture *structure)
@@ -42,18 +42,13 @@ Error verify (Stack_stucture *structure)
     
 
 
-    return OK;
+    return ok;
 }
 
 void Push (Stack_stucture *structure, type a)
 {
     Error err = verify (structure);
-    if (structure->size == 0)
-    {
-        printf (red "Stack size = 0" normal "\n");
-        err = pop_size_null;
-    }
-    if (err == OK)
+    if (err == ok)
     {
         if (structure->size < structure->capacity)
         {
@@ -62,14 +57,17 @@ void Push (Stack_stucture *structure, type a)
         }
         else 
         {
-            structure->capacity *= 2;
+            fprintf (stderr, "%lu%lu\n", structure->capacity, structure->size);
+            structure->capacity = structure->capacity*2 + 2;
+            fprintf (stderr, "%lu%lu\n", structure->capacity, structure->size);
             structure->Stack = (type *)realloc (structure->Stack, structure->capacity);
+            fprintf (stderr, "%lu%lu\n", structure->capacity, structure->size);
             structure->size ++;
             structure->Stack[structure->size] = a;
         }
         err = verify (structure);
     }
-    if (err != OK) 
+    if (err != ok) 
     {
         print_error (err);
     }
@@ -79,12 +77,17 @@ void Push (Stack_stucture *structure, type a)
 type Pop (Stack_stucture *structure)
 {
     Error err = verify (structure);
-    if (err == OK)
+    if (structure->size == 0)
+    {
+        printf (red "Stack size = 0" normal "\n");
+        err = pop_size_null;
+    }
+    if (err == ok)
     {
         structure->size --;
         err = verify (structure);
     }
-    if (err != OK) 
+    if (err != ok) 
     {
         print_error (err);
         return (type)0xDEADDEAD;
@@ -115,9 +118,11 @@ void print_error (Error err)
         magenta "stack_nullptr = 2" normal "\n"
         magenta "bigger_size = 3" normal "\n"
         magenta "cannary_spoiled_beg = 4" normal "\n"
-        magenta "cannary_spoiled_end = 5" normal "\n", (size_t)err);
+        magenta "cannary_spoiled_end = 5" normal "\n"
+        magenta  "pop_size_null = 6\n", (size_t)err);
 }
 
+//FIXME - StackPrint
 void Stack_print (Stack_stucture *structure)
 {
     for (size_t i = 1; i <= structure->size; i++)
@@ -129,7 +134,7 @@ void Stack_print (Stack_stucture *structure)
 void Add (Stack_stucture *structure)
 {
     Error err = verify(structure);
-    if (err == OK && structure -> size >= 2)
+    if (err == ok && structure -> size >= 2)
     {
     type a = 0;
     a = Pop (structure);
@@ -137,12 +142,12 @@ void Add (Stack_stucture *structure)
     Push (structure, a);
     err = verify(structure);
     }
-    if (err != OK) print_error (err);
+    if (err != ok) print_error (err);
 }
 void Sub (Stack_stucture *structure)
 {
     Error err = verify(structure);
-    if (err == OK && structure -> size >= 2)
+    if (err == ok && structure -> size >= 2)
     {
     type a = 0;
     a = Pop (structure) * (-1);
@@ -150,12 +155,12 @@ void Sub (Stack_stucture *structure)
     Push (structure, a);
     err = verify(structure);
     }
-    if (err != OK) print_error (err);
+    if (err != ok) print_error (err);
 }
 void Mul (Stack_stucture *structure)
 {
     Error err = verify(structure);
-    if (err == OK && structure -> size >= 2)
+    if (err == ok && structure -> size >= 2)
     {
     type a = 0;
     a = Pop (structure);
@@ -163,12 +168,12 @@ void Mul (Stack_stucture *structure)
     Push (structure, a);
     err = verify(structure);
     }
-    if (err != OK) print_error (err);
+    if (err != ok) print_error (err);
 }
 void Div (Stack_stucture *structure)
 {
     Error err = verify(structure);
-    if (err == OK && structure -> size >= 2)
+    if (err == ok && structure -> size >= 2)
     {
     type a = 0;
     a = 1 / Pop (structure);
@@ -176,16 +181,16 @@ void Div (Stack_stucture *structure)
     Push (structure, a);
     err = verify(structure);
     }
-    if (err != OK) print_error (err);
+    if (err != ok) print_error (err);
 }
 void Out (Stack_stucture *structure)
 {
     Error err = verify(structure);
-    if (err == OK && structure -> size > 0)
+    if (err == ok && structure -> size > 0)
     {
-    printf ("%d", Pop(structure));
+    printf ("%d ", Pop(structure));
     err = verify(structure);
     }
-    if (err != OK) print_error (err);
+    if (err != ok) print_error (err);
 }
 
